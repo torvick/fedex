@@ -97,17 +97,20 @@ module Fedex
 
     def self.parse_response(response_body)
       rates = []
-      response_body['RateReply']['RateReplyDetails'].each do |rate_reply_detail|
-        rate = {}
-        rate_reply_detail['RatedShipmentDetails'].each do |rated_shipment_details|
-          rate[:price] = rated_shipment_details['ShipmentRateDetail']['TotalNetChargeWithDutiesAndTaxes']['Amount']
-          rate[:currency] = rated_shipment_details['ShipmentRateDetail']['TotalNetChargeWithDutiesAndTaxes']['Currency']
+      if response_body['RateReply']['RateReplyDetails'].kind_of?(Array)
+        response_body['RateReply']['RateReplyDetails'].each do |rate_reply_detail|
+          rate = {}
+          rate_reply_detail['RatedShipmentDetails'].each do |rated_shipment_details|
+            rate[:price] = rated_shipment_details['ShipmentRateDetail']['TotalNetChargeWithDutiesAndTaxes']['Amount']
+            rate[:currency] = rated_shipment_details['ShipmentRateDetail']['TotalNetChargeWithDutiesAndTaxes']['Currency']
+          end
+          rate[:service_level] = {
+            name: rate_reply_detail['ServiceType'].to_s.split("_").map(&:capitalize).join(" "), 
+            token: rate_reply_detail['ServiceType'].to_s
+          }
+          rates << rate
         end
-        rate[:service_level] = {
-          name: rate_reply_detail['ServiceType'].to_s.split("_").map(&:capitalize).join(" "), 
-          token: rate_reply_detail['ServiceType'].to_s
-        }
-        rates << rate
+      else
       end
       rates
     end
